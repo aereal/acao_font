@@ -8,14 +8,25 @@ STATIC_DIR = File.join(File.dirname(__FILE__), 'static')
 
 module AcaoFont
   class App < Sinatra::Base
-    get '/font/*' do
+    get '/font/:font_name' do
       headers 'Access-Control-Allow-Origin' => '*'
 
-      path = params[:splat].first
-      font_path = File.expand_path(path, STATIC_DIR)
-      content = File.read(font_path)
+      begin
+        font_name = (params[:font_name] || '').gsub(%r#(/|[.][.])#, '')
+        font_path = File.join(STATIC_DIR, 'font', font_name)
+        ext = File.extname(font_path)
 
-      content
+        case ext
+        when '.svg'
+          content_type 'image/svg+xml'
+        end
+
+        content = File.read(font_path)
+        content
+      rescue Errno::ENOENT
+        puts 'Not Found'
+        halt 404
+      end
     end
   end
 end
